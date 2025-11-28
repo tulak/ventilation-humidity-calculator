@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventilation Humidity Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+        }
+        .slider-thumb::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .transition-all-300 {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="text-slate-700 min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Main Container -->
+    <div class="max-w-md w-full glass-panel shadow-2xl rounded-2xl overflow-hidden transition-all-300">
+        
+        <!-- Header -->
+        <div class="bg-slate-800 text-white p-6 text-center relative">
+            <h1 class="text-2xl font-bold"><i class="fa-solid fa-wind mr-2"></i>Ventilation Analyzer</h1>
+            <p class="text-slate-400 text-sm mt-1">Relative vs. Absolute Humidity</p>
+        </div>
+
+        <div class="p-6 space-y-8">
+
+            <!-- Indoor Section -->
+            <div class="relative bg-orange-50 p-4 rounded-xl border border-orange-100">
+                <div class="absolute -top-3 left-4 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+                    INDOORS
+                </div>
+                
+                <!-- Temp In -->
+                <div class="mb-4 mt-2">
+                    <div class="flex justify-between mb-1">
+                        <label class="text-xs font-semibold uppercase text-slate-500">Temperature</label>
+                        <span class="font-bold text-orange-600"><span id="val-temp-in">22</span>°C</span>
+                    </div>
+                    <input type="range" min="0" max="40" value="22" id="temp-in" class="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer slider-thumb accent-orange-500">
+                </div>
+
+                <!-- RH In -->
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="text-xs font-semibold uppercase text-slate-500">Relative Humidity</label>
+                        <span class="font-bold text-blue-600"><span id="val-rh-in">50</span>%</span>
+                    </div>
+                    <input type="range" min="0" max="100" value="50" id="rh-in" class="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer slider-thumb accent-blue-500">
+                </div>
+
+                <!-- Result In -->
+                <div class="mt-3 text-right">
+                    <span class="text-xs text-slate-500">Absolute Humidity:</span>
+                    <span class="font-mono font-bold text-slate-800" id="abs-in">0.00</span> <span class="text-xs text-slate-400">g/m³</span>
+                </div>
+            </div>
+
+            <!-- Outdoor Section -->
+            <div class="relative bg-cyan-50 p-4 rounded-xl border border-cyan-100">
+                <div class="absolute -top-3 left-4 bg-cyan-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+                    OUTDOORS
+                </div>
+
+                <!-- Temp Out -->
+                <div class="mb-4 mt-2">
+                    <div class="flex justify-between mb-1">
+                        <label class="text-xs font-semibold uppercase text-slate-500">Temperature</label>
+                        <span class="font-bold text-cyan-700"><span id="val-temp-out">5</span>°C</span>
+                    </div>
+                    <input type="range" min="-20" max="40" value="5" id="temp-out" class="w-full h-2 bg-cyan-200 rounded-lg appearance-none cursor-pointer slider-thumb accent-cyan-600">
+                </div>
+
+                <!-- RH Out -->
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="text-xs font-semibold uppercase text-slate-500">Relative Humidity</label>
+                        <span class="font-bold text-blue-600"><span id="val-rh-out">80</span>%</span>
+                    </div>
+                    <input type="range" min="0" max="100" value="80" id="rh-out" class="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer slider-thumb accent-blue-500">
+                </div>
+
+                <!-- Result Out -->
+                <div class="mt-3 text-right">
+                    <span class="text-xs text-slate-500">Absolute Humidity:</span>
+                    <span class="font-mono font-bold text-slate-800" id="abs-out">0.00</span> <span class="text-xs text-slate-400">g/m³</span>
+                </div>
+            </div>
+
+            <!-- Verdict / Conclusion -->
+            <div id="verdict-card" class="bg-white p-5 rounded-xl border-l-4 shadow-sm transition-all-300">
+                <h3 class="font-bold text-lg mb-2" id="verdict-title">Calculating...</h3>
+                <p class="text-sm text-slate-600 mb-3" id="verdict-text">...</p>
+                
+                <!-- Visual Bar -->
+                <div class="w-full bg-gray-200 rounded-full h-4 mt-2 relative overflow-hidden">
+                    <div id="diff-bar" class="h-full transition-all duration-500 absolute top-0"></div>
+                    <!-- Center Marker -->
+                    <div class="absolute top-0 bottom-0 left-1/2 w-0.5 bg-slate-400 z-10"></div>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400 mt-1">
+                    <span>Will Dry Air</span>
+                    <span>Will Humidify</span>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- Footer Info -->
+        <div class="bg-slate-100 p-4 text-xs text-slate-500 text-center border-t border-slate-200">
+            Based on the Magnus formula for saturation vapor pressure.
+        </div>
+      
+        <div class="bg-slate-100 p-4 text-xs text-slate-500 text-center border-t border-slate-200">
+            Created by Geminy 3 Pro
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const inputs = {
+            tempIn: document.getElementById('temp-in'),
+            rhIn: document.getElementById('rh-in'),
+            tempOut: document.getElementById('temp-out'),
+            rhOut: document.getElementById('rh-out')
+        };
+
+        const displays = {
+            tempIn: document.getElementById('val-temp-in'),
+            rhIn: document.getElementById('val-rh-in'),
+            tempOut: document.getElementById('val-temp-out'),
+            rhOut: document.getElementById('val-rh-out'),
+            absIn: document.getElementById('abs-in'),
+            absOut: document.getElementById('abs-out'),
+            verdictTitle: document.getElementById('verdict-title'),
+            verdictText: document.getElementById('verdict-text'),
+            verdictCard: document.getElementById('verdict-card'),
+            diffBar: document.getElementById('diff-bar')
+        };
+
+        // --- Physics Calculations ---
+
+        /**
+         * Calculate Saturation Vapor Pressure (hPa) using Magnus formula
+         * T = Temperature in Celsius
+         */
+        function getSaturationPressure(T) {
+            return 6.112 * Math.exp((17.67 * T) / (T + 243.5));
+        }
+
+        /**
+         * Calculate Absolute Humidity (g/m^3)
+         * T = Temperature in Celsius
+         * RH = Relative Humidity %
+         */
+        function getAbsoluteHumidity(T, RH) {
+            const Psat = getSaturationPressure(T); // hPa
+            const Pact = Psat * (RH / 100); // Actual Vapor Pressure
+            
+            // Formula derived from Ideal Gas Law: AH = (216.7 * Pact) / (T + 273.15)
+            // Constant 216.7 accounts for molecular weight of water vapor and gas constant
+            const ah = (216.7 * Pact) / (T + 273.15);
+            return ah;
+        }
+
+        function update() {
+            // 1. Get Values
+            const tIn = parseFloat(inputs.tempIn.value);
+            const rIn = parseFloat(inputs.rhIn.value);
+            const tOut = parseFloat(inputs.tempOut.value);
+            const rOut = parseFloat(inputs.rhOut.value);
+
+            // 2. Update Label Displays
+            displays.tempIn.textContent = tIn;
+            displays.rhIn.textContent = rIn;
+            displays.tempOut.textContent = tOut;
+            displays.rhOut.textContent = rOut;
+
+            // 3. Calculate Physics
+            const ahIn = getAbsoluteHumidity(tIn, rIn);
+            const ahOut = getAbsoluteHumidity(tOut, rOut);
+            const diff = ahOut - ahIn; // Positive means outside is wetter
+
+            // 4. Update Result Numbers
+            displays.absIn.textContent = ahIn.toFixed(2);
+            displays.absOut.textContent = ahOut.toFixed(2);
+
+            // 5. Update UI State based on difference
+            
+            // Threshold for "Equal" to avoid flickering on tiny diffs
+            const threshold = 0.1; 
+
+            if (Math.abs(diff) < threshold) {
+                // Neutral
+                displays.verdictCard.className = "bg-white p-5 rounded-xl border-l-4 shadow-sm transition-all-300 border-slate-400";
+                displays.verdictTitle.textContent = "Equilibrium";
+                displays.verdictTitle.className = "font-bold text-lg mb-2 text-slate-700";
+                displays.verdictText.textContent = "The absolute humidity is roughly the same inside and outside. Opening the window won't significantly change moisture levels.";
+                
+                // Bar Center
+                displays.diffBar.style.width = "0%";
+                displays.diffBar.style.left = "50%";
+                displays.diffBar.style.backgroundColor = "#94a3b8";
+
+            } else if (diff > 0) {
+                // Outside is WETTER -> Humidity will RISE
+                displays.verdictCard.className = "bg-blue-50 p-5 rounded-xl border-l-4 shadow-sm transition-all-300 border-blue-500";
+                displays.verdictTitle.textContent = "Humidity Will RISE";
+                displays.verdictTitle.className = "font-bold text-lg mb-2 text-blue-700";
+                displays.verdictText.textContent = `The outside air holds ${diff.toFixed(2)} g/m³ MORE water than inside. Opening the window will bring moisture IN.`;
+                
+                // Bar expands to right
+                // Cap width at 50% (half the container)
+                let percent = Math.min((diff / 5) * 50, 50); 
+                displays.diffBar.style.left = "50%";
+                displays.diffBar.style.width = `${percent}%`;
+                displays.diffBar.style.backgroundColor = "#3b82f6"; // Blue
+
+            } else {
+                // Outside is DRIER -> Humidity will DROP
+                displays.verdictCard.className = "bg-amber-50 p-5 rounded-xl border-l-4 shadow-sm transition-all-300 border-amber-500";
+                displays.verdictTitle.textContent = "Humidity Will DROP";
+                displays.verdictTitle.className = "font-bold text-lg mb-2 text-amber-700";
+                displays.verdictText.textContent = `The outside air holds ${Math.abs(diff).toFixed(2)} g/m³ LESS water than inside. Opening the window will suck moisture OUT.`;
+                
+                // Bar expands to left
+                let percent = Math.min((Math.abs(diff) / 5) * 50, 50);
+                displays.diffBar.style.left = `${50 - percent}%`;
+                displays.diffBar.style.width = `${percent}%`;
+                displays.diffBar.style.backgroundColor = "#f59e0b"; // Amber/Orange
+            }
+        }
+
+        // Add Event Listeners
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', update);
+        });
+
+        // Initial Run
+        update();
+
+    </script>
+</body>
+</html>
